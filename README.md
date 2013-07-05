@@ -53,9 +53,7 @@ Write a test program:
 
     import com.vaadin.server.VaadinRequest;
     import com.vaadin.ui.*;
-
     import fi.vtt.RVaadin.RContainer;
-
 
     public class RvaadintestUI extends UI {
 
@@ -66,7 +64,6 @@ Write a test program:
 	    	final VerticalLayout layout = new VerticalLayout();
     		layout.setMargin(true);
     		setContent(layout);
-
 	    	Label hello = new Label("Hello Vaadin World!");
     		layout.addComponent(hello);
 		
@@ -78,8 +75,8 @@ Write a test program:
 
     		/* Draw some graphics */
     		R.eval("d <- rnorm(100,0.1,0.5)");
-    		Window graph = R.getGraph("plot(cumsum(d), type='l', bty='L')", 600,
-    				400);
+    		Window graph = R.getGraph(
+                    "plot(cumsum(d), type='l', bty='L')", 600,  400);
     		getUI().addWindow(graph);
     	}
     }
@@ -87,7 +84,46 @@ Write a test program:
 The program will produce some output to both Terminal and to the Web interface. 
 
 ![RVaadin Example Application](man/img/RVaadin_success.png?raw=true)
-**Figure 1.** An example output from the the RVaadin test program. (Have some fun, and click the reload button several times. Even though the expected value of the normal distribution is positive, E(d) = 0.1, the variation with SD(d) = 0.5 turns the cumulative sum negative quite often. Those who bother can compute the actual probability of this event). 
+**Figure 1.** An example output from the the RVaadin test program. Even though the expected value of the normal distribution is positive, E(d) = 0.1, the variation with SD(d) = 0.5 turns the cumulative sum negative quite often. Those who bother can compute the actual probability of this occasion since the events are i.i.d. 
+
+Usage
+-----
+
+So far, we have only seen the *eval(String)* method of the RContainer class, which takes an R expression as Java String  and evaluates it in the R session. In general, all communication with the R process go through the RContainer class which takes care that a single R session operates with a single task at a given time.
+
+Other RContainer methods include 
+
+* *getDoubles*, *getStrings*, ... return a correspoinding Java object given the R object name as String. These methods are merely wrappers for the corresponding Rserve RConnection methods.
+* *getUploadElement* returns an instance of the RUpload class. The element can be used to upload arbitrary files to the R session working directory.
+* *getDownloadLink* returns a Vaadin Link object to download files saved to the R session default directory. 
+* *getGraph* and *getEmbeddedGraph* can be used to get the images produced by R, where the argument is the ordinary R plot command as String.
+* *getListSelect*, *getOptionGroup*, *getSlider*, ... return the corresponding Vaadin elements that implicitly and immediately change the given R variable into the selected value. 
+
+
+Observe that each R session will be assigned a temporal default working directory by Rserve. This directory is intentionally different for each R session, and should not be changed in R with *setwd()* or even queried with *getwd()* for other than debugging purposese. When the R session and the Web software are running on different machines, information between Java and R is most convenienly passed only through the RContainer class, and not by pointing directly to different files in the filesystem. Having a commond directory for multiple sessions is also not a good practise, since it enables the users to overwrite each other's files. 
+
+In addition to these *get...* methods, there are couple of set methods like *setGraphButtonsVisible( boolean )*, which change the behavior of the Graph window seen in the previous example. 
+
+
+Further information
+-------------------
+
+At present, the source code together with the JavaDoc are the definitive source of information. All proposals, ideas and concrete collaboration plans are warmly welcomed by the author(s) to FirstName.LastName@vtt.fi.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
