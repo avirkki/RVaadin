@@ -1,6 +1,4 @@
 <img align="right" src="man/img/vttplain.png" />
-
-
 RVaadin
 =======
 
@@ -33,6 +31,8 @@ RVaadin is developed at
 
 Quick Installation
 ----------------
+
+You can also read [detailed installation istructions for Ubuntu Linux 12.04.2](man/Installation_Ubuntu.md)
 
 ### Download the tools
 
