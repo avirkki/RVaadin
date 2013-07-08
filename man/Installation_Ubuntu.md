@@ -38,7 +38,7 @@ Have a look at the [Book of Vaadin](https://vaadin.com/book), Chapter 2. It cont
 
     The last two commands start the service and open the default Web browser to show Tomcat configuration window. To use Tomcat's Manager App, you need to edit `/bin tomcat/conf/tomcat-users.xml`, but that is only optional as software can also be deployed by simply copying the corresponding web archive (.war) file to `/bin/tomcat/webapps/` and letting the server do a hot deployment, as shown in the next, optional step.
 
-    * Test Apache Tomcat by downloading [a test application](war/Tomcat_Tryout.war?raw=true) from RVaadin GitHub repository and placing it manually under the Tomcat’s webapps directory.
+  * Test Apache Tomcat by downloading [a test application](war/Tomcat_Tryout.war?raw=true) from RVaadin GitHub repository and placing it manually under the Tomcat’s webapps directory.
 
             cd ~/Downloads/
             mv Tomcat_Tryout.war ~/bin/tomcat/webapps/
