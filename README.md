@@ -32,13 +32,13 @@ RVaadin is developed at
 Quick Installation
 ----------------
 
-You can also read [detailed installation istructions for Ubuntu Linux 12.04.2](man/Installation_Ubuntu.md)
+You can also follow the [detailed instructions for Ubuntu LTS](man/Installation_Ubuntu.md) 12.04.2 Linux.
 
 ### Download the tools
 
 1. Follow the [Book of Vaadin](https://vaadin.com/book/vaadin7/-/page/getting-started.html) to install Vaadin production environment.
 2. Download the [RVaadin.jar](jar/RVaadin.jar?raw=true) Java library.
-3. Install [R](http://cran.r-project.org/) and the [Rserve](http://www.rforge.net/Rserve/) package.
+3. Install [R](http://cran.r-project.org/), and the [Rserve](http://www.rforge.net/Rserve/) and [Cairo](http://www.rforge.net/Cairo/) packages for it.
 4. Download the Rserve Java libraries [RservEngine.jar](http://www.rforge.net/Rserve/files/RserveEngine.jar) and [REngine.jar](http://www.rforge.net/Rserve/files/REngine.jar).
 
 ### Test the setup
@@ -107,7 +107,7 @@ In addition to these *get...* methods, there are couple of set methods like *set
 Further information
 -------------------
 
-At present, the source code together with the JavaDoc are the definitive source of information. All proposals, ideas and concrete collaboration plans are warmly welcomed by the author(s) at FirstName.LastName@vtt.fi.
+At present, the source code together with the JavaDoc are the definitive source of information. All proposals, ideas and concrete collaboration plans are warmly welcomed by the author(s) at `FirstName.LastName@vtt.fi`.
 
 
 
