@@ -2,7 +2,7 @@
 Installation instructions for Ubuntu 12.04.2
 ============================================
 
-These instructions show how to install the [Eclipse editor](http://www.eclipse.org/), [Apache Tomcat](http://tomcat.apache.org/) Web server, [Rserve](http://www.rforge.net/Rserve/) R server and the required Java libraries to a fresh installation of [Ubuntu 12.04.2 LTS Linux](http://www.ubuntu.com/download/desktop). Other editors (like Netbeans) can also be used, if desired. The installation procedure is analoguous in other operating systems. Optional steps are marked with *.
+These instructions show how to install the [Eclipse editor](http://www.eclipse.org/), [Apache Tomcat](http://tomcat.apache.org/) Web server, [Rserve](http://www.rforge.net/Rserve/) R server and the required Java libraries to a fresh installation of [Ubuntu 12.04.2 LTS Linux](http://www.ubuntu.com/download/desktop). Other editors (like Netbeans) can also be used, if desired. The installation procedure is analoguous in other operating systems. Optional steps are marked with **[Optional]**.
 
 You need a basic understanding of [R](http://www.r-project.org/) and [Java](http://www.oracle.com/us/technologies/java/enterprise-edition/overview/index.html), and optionally the basics of Git to access the complete source from GitHub.
 
@@ -38,14 +38,14 @@ Have a look at the [Book of Vaadin](https://vaadin.com/book), Chapter 2. It cont
 
     The last two commands start the service and open the default Web browser to show Tomcat configuration window. To use Tomcat's Manager App, you need to edit `/bin tomcat/conf/tomcat-users.xml`, but that is only optional as software can also be deployed by simply copying the corresponding web archive (.war) file to `/bin/tomcat/webapps/` and letting the server do a hot deployment, as shown in the next, optional step.
 
-  * Test Apache Tomcat by downloading [a test application](war/Tomcat_Tryout.war?raw=true) from RVaadin GitHub repository and placing it manually under the Tomcat’s webapps directory.
+5. **[Optional]** Test Apache Tomcat by downloading [a test application](war/Tomcat_Tryout.war?raw=true) from RVaadin GitHub repository and placing it manually under the Tomcat’s webapps directory.
 
-            cd ~/Downloads/
-            mv Tomcat_Tryout.war ~/bin/tomcat/webapps/
-            gnome-open http://localhost:8080/Tomcat_Tryout
+        cd ~/Downloads/
+        mv Tomcat_Tryout.war ~/bin/tomcat/webapps/
+        gnome-open http://localhost:8080/Tomcat_Tryout
 
-            ~/bin/tomcat/bin/shutdown.sh
-            ~/bin/tomcat/bin/startup.sh
+        ~/bin/tomcat/bin/shutdown.sh
+        ~/bin/tomcat/bin/startup.sh
 
 ** work in progress **
 
