@@ -1,6 +1,4 @@
 <img align="right" src="man/img/vttplain.png" />
-
-
 RVaadin
 =======
 
@@ -34,11 +32,13 @@ RVaadin is developed at
 Quick Installation
 ----------------
 
+You can also follow the [detailed instructions for **Ubuntu LTS** 12.04.2 Linux](man/Installation_Ubuntu.md).
+
 ### Download the tools
 
 1. Follow the [Book of Vaadin](https://vaadin.com/book/vaadin7/-/page/getting-started.html) to install Vaadin production environment.
 2. Download the [RVaadin.jar](jar/RVaadin.jar?raw=true) Java library.
-3. Install [R](http://cran.r-project.org/) and the [Rserve](http://www.rforge.net/Rserve/) package.
+3. Install [R](http://cran.r-project.org/), and the [Rserve](http://www.rforge.net/Rserve/) and [Cairo](http://www.rforge.net/Cairo/) packages for it.
 4. Download the Rserve Java libraries [RservEngine.jar](http://www.rforge.net/Rserve/files/RserveEngine.jar) and [REngine.jar](http://www.rforge.net/Rserve/files/REngine.jar).
 
 ### Test the setup
