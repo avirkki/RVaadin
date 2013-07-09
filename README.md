@@ -44,8 +44,8 @@ Quick Installation
 ### Test the setup
 
 1. Start a new Vaadin 7 project in Eclipse. Call it e.g. "RVaadinTest"
-2. Copy or link the three Java libraries under the `RVaadinTest/WebContent/WEB-INF/lib/` folder. (You may need to notify Eclipse for these new libraries by refreshing the Project Explorer with F5.)
-4. Launch R serve in Terminal with `R CMD Rserve`. Leave the Terminal window open to see the output (which is handy for debugging).
+2. Copy or link the three Java libraries under the *RVaadinTest/WebContent/WEB-INF/lib/* folder. (When using  Eclipse, you may need to refresh the Project Explorer with F5.)
+4. Launch R serve in Terminal with `R CMD Rserve`. Leave the Terminal window open to see the output from the R processes. This is handy for debugging.
 
 Write a test program:
 
@@ -84,30 +84,29 @@ Write a test program:
 The program will produce some output to both Terminal and to the Web interface. 
 
 ![RVaadin Example Application](man/img/RVaadin_success.png?raw=true)
-**Figure 1.** An example output from the the RVaadin test program. Even though the expected value of the normal distribution is positive, E(d) = 0.1, the variation with SD(d) = 0.5 turns the cumulative sum negative quite often. Those who bother can compute the actual probability of this occasion since the events are i.i.d. 
+**Figure 1.** An example output from the the RVaadin test program. The expected value of the normally, identically and independently distributed sequence is 0.1 and SD(d) = 0.5. Because of the large standard deviation, the cumulative sum turns negative quite often. 
 
 Usage
 -----
 
-So far, we have only seen the *eval(String)* method of the RContainer class, which takes an R expression as Java String  and evaluates it in the R session. In general, all communication with the R process go through the RContainer class which takes care that a single R session operates with a single task at a given time.
+So far, we have only seen the *eval(String)* method of the RContainer class, which takes an R expression as a Java String  and evaluates it in the R session. In general, all communication with the R process should go through the RContainer class which takes care that a single R session operates with a single task at a given time.
 
 Other RContainer methods include 
 
-* *getDoubles*, *getStrings*, ... return the correspoinding Java object given the R object name as String. These methods are merely wrappers for the corresponding Rserve RConnection methods.
+* *getDoubles*, *getStrings*, ... take an R object name as String, and return the correspoinding Java object. These methods are merely wrappers for the corresponding Rserve RConnection methods.
 * *getUploadElement* returns an instance of the RUpload class. The element can be used to upload arbitrary files to the R session's working directory.
-* *getDownloadLink* returns a Vaadin Link object to download files saved to the R session working directory. 
-* *getGraph* and *getEmbeddedGraph* can be used to get the images produced by R, where the argument is the ordinary R plot command as String.
-* *getListSelect*, *getOptionGroup*, *getSlider*, ... return the corresponding Vaadin elements that implicitly and immediately change the given R variable into the selected value. 
+* *getDownloadLink* returns a Vaadin Link pointing to a file saved to the working directory (of the corresponding R process). 
+* *getGraph* and *getEmbeddedGraph* can be used to show the images produced by R, where the argument is an ordinary R plot command as String.
+* *getListSelect*, *getOptionGroup*, *getSlider*, ... return the corresponding Vaadin elements that implicitly and immediately change the given R variable into the selected value. If other actions are needed, user can attach additional listeners to these objects. 
 
+In addition to these *get...* methods, there are a few set methods like *setGraphButtonsVisible( boolean )*, which change the behavior of the Graph window seen in the previous example, and *close()* and *closeAndDeleteFiles()* to explicitly clean up the R session (e.g. if there were other files that graphics generated).
 
-Observe that each R session will be assigned a temporal default working directory by Rserve. This directory is intentionally different for each R session, and should not be changed in R with *setwd()* or even queried with *getwd()* for other than debugging purposes. When the R session and the Web software are running on different machines, information between Java and R is most convenienly passed only through the RContainer class, and not by pointing directly to different files in the filesystem. Having a commond directory for multiple sessions is also not a good practise, since it enables the users to overwrite each other's files. 
-
-In addition to these *get...* methods, there are couple of set methods like *setGraphButtonsVisible( boolean )*, which change the behavior of the Graph window seen in the previous example, and *close()* and *closeAndDeleteFiles()* to explicitly clean up the R session (e.g. if there were other files that graphics generated).
+Observe that each R session will be assigned a temporal default working directory by Rserve. This directory is intentionally different for each R session, and should not be changed in R with *setwd()* or even queried with *getwd()* for other than debugging purposes. Pointing directly to files produced by R obviously does not make sense when the R processes are scattered between separate machines. Having a commond directory for multiple sessions is also not good practise, since it enables the users to overwrite each other's files. 
 
 Further information
 -------------------
 
-At present, the source code together with the JavaDoc are the definitive source of information. All proposals, ideas and concrete collaboration plans are warmly welcomed by the author(s) at FirstName.LastName@vtt.fi.
+At present, JavaDoc together with the source code are the definitive source of information. All proposals, ideas and concrete collaboration plans are warmly welcomed by the author(s) at *FirstName.LastName@vtt.fi*.
 
 
 
