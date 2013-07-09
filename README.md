@@ -86,8 +86,8 @@ The program will produce some output to both Terminal and to the Web interface.
 ![RVaadin Example Application](man/img/RVaadin_success.png?raw=true)
 **Figure 1.** An example output from the the RVaadin test program. The expected value of the normally, identically and independently distributed sequence is 0.1 and SD(d) = 0.5. Because of the large standard deviation, the cumulative sum turns negative quite often. 
 
-Usage
------
+General Usage
+-------------
 
 So far, we have only seen the *eval(String)* method of the RContainer class, which takes an R expression as a Java String  and evaluates it in the R session. In general, all communication with the R process should go through the RContainer class which takes care that a single R session operates with a single task at a given time.
 
@@ -102,6 +102,87 @@ Other RContainer methods include
 In addition to these *get...* methods, there are a few set methods like *setGraphButtonsVisible( boolean )*, which change the behavior of the Graph window seen in the previous example, and *close()* and *closeAndDeleteFiles()* to explicitly clean up the R session (e.g. if there were other files that graphics generated).
 
 Observe that each R session will be assigned a temporal default working directory by Rserve. This directory is intentionally different for each R session, and should not be changed in R with *setwd()* or even queried with *getwd()* for other than debugging purposes. Pointing directly to files produced by R obviously does not make sense when the R processes are scattered between separate machines. Having a commond directory for multiple sessions is also not good practise, since it enables the users to overwrite each other's files. 
+
+Some Examples
+-------------
+
+For brevity, we only show the *init()* routine of the complete program, or just snippets of code.
+
+### Using R to evaluate a Java String
+
+This program prints the current R version to the Web browser. 
+
+    @Override
+    protected void init(VaadinRequest request) {
+        final VerticalLayout layout = new VerticalLayout();
+        layout.setMargin(true);
+        setContent(layout);
+
+        /* Initialize the R session */
+        RContainer R = new RContainer();
+
+        /* Construct a label and add it to the UI layout */
+        Label label = new Label();
+        layout.addComponent(label);
+
+        /* Generate some content to the label */
+        String message = R.getString("paste('R Version: ', version$version.string)");
+        label.setValue(message);
+
+    }
+
+This yields the following output
+
+![R Version in Browser](man/img/R_Version_in_Browser.png?raw=true)
+
+
+### Selecting a value from a list
+
+Suppose that we need to provide several categorical options to choose from, and these options have been computed earlier in R. 
+
+        /* Construct an R vector of different values */
+        R.eval("input <- c('foo', 'bar', 'bar', 'baz', 'foobar', 'xyzzy')");
+
+        /* Generate a ListSelect component with these options and save the
+         * selection immediately into the R variable 'output' */
+        final ListSelect ls = R.getListSelect("input", "output");
+        
+        /* Add the element into the UI */
+        layout.addComponent(ls);
+
+        /* Ask R about the new value */
+        ls.addValueChangeListener(new ValueChangeListener() {
+
+            @Override
+            public void valueChange(ValueChangeEvent event) {
+                Notification.show("The user chose: " + R.getString("output"));
+            }
+        });
+
+The corresponding UI will look like
+
+![User chose xyzzy](man/img/User_chose_xyzzy.png?raw=true)
+
+### Finding errors in R code
+
+Suppose that we wrote *ersion* instead of *version* in the previous *getString* example:
+
+    String message = R.getString("paste('R Version: ', ersion$version.string)");
+
+
+
+The browser now shows several Java error messages
+
+![RVaadin R execution error](man/img/RVaadin_R_execution_error.png?raw=true)
+
+Whereas the actual R error is shown in the open Terminal (which was used to launch Rserve):
+
+    Error in paste("R Version: ", ersion$version.string) : 
+      object 'ersion' not found
+    RVaadin: eval failed, request status: error code: 127 
+
+
+Errors are intentionally designed to be as visible and verbose as possible, since the other option, errors going unnoticed to a production software or a scientific publication, is much worse.
 
 Further information
 -------------------
