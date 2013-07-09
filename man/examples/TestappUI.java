@@ -43,13 +43,13 @@ public class TestappUI extends UI {
                         /* Compute two random frequencies and construct
                          * the R plot command */
                         R.eval("freq <- runif(n=2, min=1, max=10)");
-                        String plotSrt = "plot(sin(w*freq[1]), sin(w*freq[2]), "
+                        String plotStr = "plot(sin(w*freq[1]), sin(w*freq[2]), "
                                         + "type='l', bty='L', lty='dashed',"
                                         + "main='Random Lissajous Curve')";
 
-                        /* Get the R plot object embedded into a window
+                        /* Get the R plot object embedded into a Window
                          * and add it to the user interface */
-                        Window lissajous = R.getGraph(plotSrt, 400, 400);
+                        Window lissajous = R.getGraph(plotStr, 400, 400);
                         getUI().addWindow(lissajous);
                 }
         });
