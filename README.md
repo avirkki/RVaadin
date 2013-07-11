@@ -101,7 +101,7 @@ Other RContainer methods include
 
 In addition to these *get...* methods, there are a few set methods like *setGraphButtonsVisible( boolean )*, which change the behavior of the Graph window seen in the previous example, and *close()* and *closeAndDeleteFiles()* to explicitly clean up the R session (e.g. if there were other files that graphics generated).
 
-Observe that each R session will be assigned a temporal default working directory by Rserve. This directory is intentionally different for each R session, and should not be changed in R with *setwd()* or even queried with *getwd()* for other than debugging purposes. Pointing directly to files produced by R obviously does not make sense when the R processes are scattered between separate machines. Having a commond directory for multiple sessions is also not good practise, since it enables the users to overwrite each other's files. 
+Observe that each R session will be assigned a temporal default working directory by Rserve. This directory is intentionally different for each R session, and should not be changed in R with *setwd()* or even queried with *getwd()* for other than debugging purposes. Pointing directly to files produced by R obviously does not make sense when the R processes are scattered between separate machines. Having a commond directory for multiple sessions is also not good practise, since it enables the users to overwrite each other's files. In particular, running Rserve with user rights and using *setwd()* to change R working directory to e.g. Desktop (to see the files), *closeAndDeleteFiles()* will wipe the whole directory. To inspect R working directory in Ubuntu Linux, see under */tmp/Rserv/*, which is the default location for Rserve.
 
 Some Examples
 -------------
@@ -162,6 +162,87 @@ Suppose that we need to provide several categorical options to choose from, and 
 The corresponding UI will look like
 
 ![User chose xyzzy](man/img/User_chose_xyzzy.png?raw=true)
+
+The element style can be altered by changing *only one line*:
+
+        final ComboBox ls = R.getComboBox("input", "output");
+
+![ComboBox.png](man/img/ComboBox.png?raw=true)
+
+        final OptionGroup ls = R.getOptionGroup("input", "output");
+
+![OptionGroup.png](man/img/OptionGroup.png?raw=true)
+
+### Uploading and downloading files through browser
+
+Arbitrary data files can be uploaded with the RUpload element, and the processed results saved by making a link to the corresponding file. In the following example, the files are not processed in any way, but just saved to R working directory, and then downloaded back through a dynamically generated link.
+
+        /* Initialize Vaadin */
+        final VerticalLayout layout = new VerticalLayout();
+        layout.setMargin(true);
+        layout.setSpacing(true);
+        setContent(layout);
+
+        /* Initialize R */
+        final RContainer R = new RContainer();
+
+        /* Construct an upload element with no caption */
+        final RUpload upload = R.getUploadElement(null);
+       
+        layout.addComponent(upload);
+
+        /* Make a button that generates a link for the selected file */
+        Button getLink = new Button("Get Link", new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(ClickEvent event) {
+
+                /* Ask the RUpload element for the selected file name */
+                String fileName = upload.getSelection();
+
+                if (fileName != null) {
+                    Link link = R.getDownloadLink("Download: " + fileName,
+                            fileName);
+                    layout.addComponent(link);
+
+                } else {
+                    /* Nothing was selected */
+                    Notification.show("Please choose a file.",
+                            Notification.Type.HUMANIZED_MESSAGE);
+                }
+            }
+        });
+        layout.addComponent(getLink);
+
+![Upload and Download](man/img/Upload+Download.png?raw=true)
+
+*A proper application* should also provide an option to *log out* to make sure that no files are left to the server. Since [detecting a browser close is](https://vaadin.com/forum#!/thread/1553240)  inherently difficult, it is best to delete the temporal files from the R session as soon as they are not needed, and also provide the logout option:
+
+        /* Add a button to log out and clean the session and delete the possible
+         * files still remaining in the R working directory */
+        Button logout = new Button("Logout");
+        
+        logout.addClickListener(new Button.ClickListener() {
+
+            @Override
+            public void buttonClick(ClickEvent event) {
+
+                /* Clean and close the RVaadin session */
+                R.closeAndDeleteFiles();
+
+                /* Since the session will be closed, we should relocate the user
+                 * to an other page, like the institution main page or to a 
+                 * static "Application Closed" page */
+                getUI().getPage().setLocation("http://www.vtt.fi");
+                
+                /* Bye! */
+                getSession().close();
+            }
+        });
+        layout.addComponent(logout);
+
+![Logout](man/img/Logout.png?raw=true)
+
 
 ### Finding errors in R code
 
