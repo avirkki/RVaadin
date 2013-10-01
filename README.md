@@ -26,7 +26,10 @@ The RVaadin library is intended to be used when the production standards for ser
 
 RVaadin is developed at
 [VTT Technical Research Centre of Finland](http://http://www.vtt.fi/?lang=en),
- and published under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html). 
+ and published both under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html) or [GNU GPL-2 license](http://www.gnu.org/licenses/gpl-2.0.html). The proposed license is Apache 2.0, but in case of any license [incompatibility issues](http://www.apache.org/licenses/GPL-compatibility.html), users are free to apply also the GPLv2 license for the RVaadin library.
+
+
+The Vaadin framework itself The users can choose the most suitable license  in case that any
 
 
 Quick Installation
@@ -101,7 +104,7 @@ Other RContainer methods include
 
 In addition to these *get...* methods, there are a few set methods like *setGraphButtonsVisible( boolean )*, which change the behavior of the Graph window seen in the previous example, and *close()* and *closeAndDeleteFiles()* to explicitly clean up the R session (e.g. if there were other files that graphics generated).
 
-Observe that each R session will be assigned a temporal default working directory by Rserve. This directory is intentionally different for each R session, and should not be changed in R with *setwd()* or even queried with *getwd()* for other than debugging purposes. Pointing directly to files produced by R obviously does not make sense when the R processes are scattered between separate machines. Having a commond directory for multiple sessions is also not good practise, since it enables the users to overwrite each other's files. In particular, running Rserve with user rights and using *setwd()* to change R working directory to e.g. Desktop (to see the files), *closeAndDeleteFiles()* will wipe the whole directory. To inspect R working directory in Ubuntu Linux, see under */tmp/Rserv/*, which is the default location for Rserve.
+Observe that each R session will be assigned a temporal default working directory by Rserve. This directory is intentionally different for each R session, and should not be changed in R with *setwd()* or even queried with *getwd()* for other than debugging purposes. Pointing directly to files produced by R obviously does not make sense when the R processes are scattered between separate machines. Having a common directory for multiple sessions is also not good practise, since it enables the users to overwrite each other's files. In particular, running Rserve with user rights and using *setwd()* to change R working directory to e.g. Desktop (to see the files), *closeAndDeleteFiles()* will wipe the whole directory. To inspect R working directory in Ubuntu Linux, see under */tmp/Rserv/*, which is the default location for Rserve.
 
 Some Examples
 -------------
