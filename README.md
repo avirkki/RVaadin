@@ -25,8 +25,7 @@ The RVaadin library is intended to be used when the production standards for ser
     * A single shared R session with other users
 
 RVaadin is developed at
-[VTT Technical Research Centre of Finland](http://http://www.vtt.fi/?lang=en),
- and published both under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html) or [GNU GPL-2 license](http://www.gnu.org/licenses/gpl-2.0.html). The proposed license is Apache 2.0, but in case of any [incompatibility issues](http://www.apache.org/licenses/GPL-compatibility.html), users are free to apply also the GPLv2 license for the RVaadin library. The [Vaadin](http://vaadin.com) framework itself uses Apache 2.0 license.
+[VTT Technical Research Centre of Finland](http://http://www.vtt.fi/?lang=en). It is published under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 
 Quick Installation
