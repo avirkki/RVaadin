@@ -1,18 +1,18 @@
 /*
-* Copyright 2013 VTT Technical Research Centre of Finland
-*
-* Licensed under the Apache License, Version 2.0 (the "License"); you may not
-* use this file except in compliance with the License. You may obtain a copy of
-* the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-* License for the specific language governing permissions and limitations under
-* the License.
-*/
+ * Copyright 2013 VTT Technical Research Centre of Finland
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 
 package fi.vtt.RVaadin;
 
@@ -21,6 +21,7 @@ import java.util.concurrent.Semaphore;
 import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.*;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Formatter;
 import java.util.GregorianCalendar;
@@ -50,12 +51,14 @@ import com.vaadin.ui.TwinColSelect;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.Reindeer;
 
+import fi.vtt.RVaadin.RVector.Type;
+
 /**
  * <p>
  * The {@link RContainer#RContainer(Application)} provides a thread-safe way of
  * initiating and calling instances of the R programming language from the
- * Vaadin UI development environment to the Rserve R Java extension.
- * Evaluations are sealed inside of {@link RContainer#eval(String)} and
+ * Vaadin UI development environment to the Rserve R Java extension. Evaluations
+ * are sealed inside of {@link RContainer#eval(String)} and
  * {@link RContainer#assign(String, String)} calls, whereas the R graphics and
  * file I/O are treated with the corresponding
  * {@link RContainer#getGraph(String, int, int)},
@@ -64,9 +67,9 @@ import com.vaadin.ui.themes.Reindeer;
  * </p>
  * 
  * <p>
- * It is also possible to request the underlying raw RConnection object with
- * the {@link RContainer#getRConnection()} call, which automatically locks the
- * R instance from being accessed by other threads. The lock must be explicitly
+ * It is also possible to request the underlying raw RConnection object with the
+ * {@link RContainer#getRConnection()} call, which automatically locks the R
+ * instance from being accessed by other threads. The lock must be explicitly
  * released with the {@link RContainer#releaseRConnection()} call. See the java
  * documentation for the corresponding methods for more details.
  * </p>
@@ -78,7 +81,7 @@ import com.vaadin.ui.themes.Reindeer;
 
 public class RContainer {
 
-	private boolean verboseErrors = true;
+	public boolean verboseErrors = true;
 	private RConnection rc = null;
 	private long imageCount = 0;
 	private String sessionID = "";
@@ -199,7 +202,7 @@ public class RContainer {
 			rc.login(user, passwd);
 
 			/* We need Cairo, but can only load that after login */
-			rc.parseAndEval("library('Cairo')");
+			rc.parseAndEval("require('Cairo')");
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -381,6 +384,38 @@ public class RContainer {
 	}
 
 	/**
+	 * <p>
+	 * Parse and evaluate an R expression and return the resulting value as (the
+	 * Java primitive) double, if possible.
+	 * </p>
+	 * 
+	 * <p>
+	 * Be careful with errors, as they are indicated with the special value
+	 * "-1.0", which is indeed also a valid double.
+	 * </p>
+	 * 
+	 * @param rs
+	 *            R string to be evaluated.
+	 * @return the double result wrapped in a Double class
+	 */
+	public double getdouble(String rs) {
+
+		double d = -1.0;
+
+		try {
+			d = (double) tryEval(rs).asDouble();
+
+		} catch (REXPMismatchException e) {
+			showREXPMismatchMessage();
+			e.printStackTrace();
+		} catch (Exception e) {
+			showGeneralRError();
+			e.printStackTrace();
+		}
+		return d;
+	}
+
+	/**
 	 * Parse and evaluate an R expression and return the resulting value as
 	 * Double, if possible. In case of any error, the return value will be
 	 * "null" and StackTraces are printed to the Server standard error stream.
@@ -404,60 +439,6 @@ public class RContainer {
 			e.printStackTrace();
 		}
 		return d;
-	}
-
-	/**
-	 * <p>
-	 * Parse and evaluate an R expression and return the resulting value as
-	 * integer, if possible.
-	 * </p>
-	 * 
-	 * <p>
-	 * Be careful with errors, as they are indicated with the special value
-	 * "-1", which is indeed also an integer.
-	 * </p>
-	 * 
-	 * @param rs
-	 * @return integer result
-	 */
-	public int getInt(String rs) {
-		int i = -1;
-
-		try {
-			i = tryEval(rs).asInteger();
-		} catch (REXPMismatchException e) {
-			showREXPMismatchMessage();
-			e.printStackTrace();
-		} catch (Exception e) {
-			showGeneralRError();
-			e.printStackTrace();
-		}
-		return i;
-	}
-
-	/**
-	 * <p>
-	 * Parse and evaluate an R expression and return the resulting value as
-	 * int[], if possible. In case of any error, the return value will be
-	 * "null" and StackTraces are printed to the Server standard error stream.
-	 * </p>
-	 * 
-	 * @param rs
-	 * @return int[] result
-	 */
-	public int[] getInts(String rs) {
-		int[] i = null;
-
-		try {
-			i = tryEval(rs).asIntegers();
-		} catch (REXPMismatchException e) {
-			showREXPMismatchMessage();
-			e.printStackTrace();
-		} catch (Exception e) {
-			showGeneralRError();
-			e.printStackTrace();
-		}
-		return i;
 	}
 
 	/**
@@ -488,10 +469,164 @@ public class RContainer {
 	}
 
 	/**
+	 * <p>
+	 * Parse and evaluate an R expression and return the resulting value as
+	 * integer, if possible.
+	 * </p>
+	 * 
+	 * <p>
+	 * Be careful with errors, as they are indicated with the special value
+	 * 'Integer.MIN_VALUE', which is indeed also an integer.
+	 * </p>
+	 * 
+	 * @param rs
+	 * @return integer result
+	 */
+	public int getInt(String rs) {
+		int i = Integer.MIN_VALUE;
+
+		try {
+			i = tryEval(rs).asInteger();
+		} catch (REXPMismatchException e) {
+			showREXPMismatchMessage();
+			e.printStackTrace();
+		} catch (Exception e) {
+			showGeneralRError();
+			e.printStackTrace();
+		}
+		return i;
+	}
+
+	/**
+	 * <p>
+	 * Parse and evaluate an R expression and return the resulting value as
+	 * int[], if possible. In case of any error, the return value will be "null"
+	 * and StackTraces are printed to the Server standard error stream.
+	 * </p>
+	 * 
+	 * @param rs
+	 * @return int[] result
+	 */
+	public int[] getInts(String rs) {
+		int[] i = null;
+
+		try {
+			i = tryEval(rs).asIntegers();
+		} catch (REXPMismatchException e) {
+			showREXPMismatchMessage();
+			e.printStackTrace();
+		} catch (Exception e) {
+			showGeneralRError();
+			e.printStackTrace();
+		}
+		return i;
+	}
+
+	/**
+	 * <p>
+	 * Parse and evaluate an R expression and return the resulting data.frame as
+	 * ArrayList<RVector>, if possible. The object types in the ArrayList will
+	 * be either double[], string[] or int[]. Pure integer vectors are not very
+	 * common in R, but one can constructed with as.integer(). Logical vectors
+	 * are not supported, since the is no way or representing missing values in
+	 * boolean[].
+	 * </p>
+	 * 
+	 * <p>
+	 * Missing values ('NA' in R) will be {@code null} for Strings,
+	 * {@code Double.NaN} for doubles, and {@code Integer.MIN_VALUE} for the int
+	 * type.
+	 * </p>
+	 * 
+	 * <p>
+	 * In case of any error, the return value will be "null" and StackTraces are
+	 * printed to the Server standard error stream.
+	 * </p>
+	 * 
+	 * @param rs
+	 *            R string to be evaluated.
+	 * @return ArrayList<Object> result
+	 */
+	public DataFrame getDataFrame(String rs) {
+
+		DataFrame df = new DataFrame();
+
+		try {
+
+			/*
+			 * Evaluate the expression and save it in a new variable. If the
+			 * result is not a data frame, stop.
+			 */
+			tryEval(".RVaadinDf <- " + rs);
+			if (!isTRUE("is.data.frame(.RVaadinDf)")) {
+				if (verboseErrors) {
+					Notification.show("RVaadin: Not a data.frame",
+							Notification.Type.ERROR_MESSAGE);
+				}
+				return null;
+			}
+
+			/* Get the dimensions of the data frame */
+			int ncol = getInt("ncol(.RVaadinDf)");
+
+			/* Construct the List column-by-column. */
+			for (int j = 1; j <= ncol; j++) {
+
+				if (isTRUE("is.integer(.RVaadinDf[[" + j + "]])")) {
+					df.add(new RVector(getInts(".RVaadinDf[[" + j + "]]")));
+
+				} else if (isTRUE("is.numeric(.RVaadinDf[[" + j + "]])")) {
+					df.add(new RVector(getDoubles(".RVaadinDf[[" + j + "]]")));
+
+				} else if (isTRUE("is.factor(.RVaadinDf[[" + j + "]])")) {
+					df.add(new RVector(getStrings("as.character(.RVaadinDf[["
+							+ j + "]])")));
+
+				} else if (isTRUE("is.character(.RVaadinDf[[" + j + "]])")) {
+					df.add(new RVector(getStrings(".RVaadinDf[[" + j + "]]")));
+
+				} else if (isTRUE("is.logical(.RVaadinDf[[" + j + "]])")) {
+					/*
+					 * There is no way of representing missing logical values.
+					 * Doing an explicit conversion to integers.
+					 */
+					df.add(new RVector(getInts("as.integer(.RVaadinDf[[" + j
+							+ "]])")));
+
+				} else {
+					/* Should never get here */
+					if (verboseErrors) {
+						Notification.show("RVaadin: Could not read column " + j
+								+ " from " + rs,
+								Notification.Type.ERROR_MESSAGE);
+					}
+					df.add(null);
+				}
+			}
+
+		} catch (REXPMismatchException e) {
+			showREXPMismatchMessage();
+			e.printStackTrace();
+		} catch (Exception e) {
+			showGeneralRError();
+			e.printStackTrace();
+		}
+		return df;
+	}
+
+	/**
+	 * <p>
 	 * The original RConnection API contains several different functions to
 	 * assign bytes, integers, doubles, REXP object and Strings to an R
 	 * variable. RVaadin implements thread-safe wrappers for String, String[],
-	 * double[] and int[].
+	 * double[], Double, int and int[].</b>
+	 * 
+	 * <p>
+	 * Also boolean and boolean[] objects can assigned, but the corresponding
+	 * get-methods are not implemented in RVaadin. The reason for this decision
+	 * is that there would not be a straightforward way of distinguishing a
+	 * missing value (NA) from a logical false.
+	 * </p>
 	 * 
 	 * @param symbol
 	 *            R symbol name
@@ -552,6 +687,13 @@ public class RContainer {
 	}
 
 	/** See {@link RContainer#assign(String, String)} */
+	public boolean assign(String symbol, int i) {
+		int[] iArray = new int[1];
+		iArray[0] = i;
+		return assign(symbol, iArray);
+	}
+
+	/** See {@link RContainer#assign(String, String)} */
 	public boolean assign(String symbol, int[] intArray) {
 		try {
 			rSemaphore.acquire();
@@ -564,6 +706,153 @@ public class RContainer {
 		} finally {
 			rSemaphore.release();
 		}
+	}
+
+	/** See {@link RContainer#assign(String, String)}. */
+	public boolean assign(String symbol, boolean b) {
+		boolean[] bArray = new boolean[1];
+		bArray[0] = b;
+		return assign(symbol, bArray);
+	}
+
+	/** See {@link RContainer#assign(String, String)} */
+	public boolean assign(String symbol, boolean[] bArray) {
+		try {
+			/* Conversion to integer, then assign */
+			int[] iArray = new int[bArray.length];
+
+			for (int i = 0; i < bArray.length; i++) {
+				if (bArray[i] == true) {
+					iArray[i] = 1;
+				} else {
+					iArray[i] = 0;
+				}
+			}
+			rSemaphore.acquire();
+			rc.assign(symbol, iArray);
+
+			/* Conversion to logical on the R side */
+			rc.eval(symbol + " <- as.logical(" + symbol + ")");
+			return true;
+
+		} catch (Exception e) {
+			showGeneralRError();
+			e.printStackTrace();
+			return false;
+		} finally {
+			rSemaphore.release();
+		}
+	}
+
+	/**
+	 * <p>
+	 * Store a DataFrame into R data.frame and return true in case of success.
+	 * </p>
+	 * 
+	 * <p>
+	 * The list presentation mimics R internal way of storing data.frame objects
+	 * as lists with vectors of different type, but same length. The RVector
+	 * objects the ArrayList can refer to double[], string[], int[],
+	 * boolean[],... but all of them need to be equal in length.
+	 * </p>
+	 * 
+	 * <p>
+	 * To assign 'NA' (missing data in R) for a scalar, use {@code null} for
+	 * Strings, {@code Double.NaN} for doubles, and {@code Integer.MIN_VALUE}
+	 * for the int type.
+	 * </p>
+	 * 
+	 * <p>
+	 * In case of any error, the return value will be false and StackTraces are
+	 * printed to the Server standard error stream.
+	 * </p>
+	 * 
+	 * @see {@link RContainer#getDataFrame(String)}
+	 * @param symbol
+	 * @param dataFrame
+	 * @param colNames
+	 * @return
+	 */
+	public boolean assign(String symbol, DataFrame dataFrame, String[] colNames) {
+		try {
+
+			int ncol = dataFrame.size();
+			StringBuilder RCall = new StringBuilder(symbol + " <- data.frame(");
+
+			/*
+			 * Construct a bunch of individual variable in the R workspace to be
+			 * collected into a data.frame
+			 */
+			for (int j = 0; j < ncol; j++) {
+				String RColName = ".RVaadin_X" + j;
+
+				if (dataFrame.get(j).type() == Type.INTEGER) {
+					assign(RColName, dataFrame.get(j).getInts());
+
+				} else if (dataFrame.get(j).type() == Type.NUMERIC) {
+					assign(RColName, dataFrame.get(j).getdoubles());
+
+				} else if (dataFrame.get(j).type() == Type.CHARACTER) {
+					assign(RColName, dataFrame.get(j).getStrings());
+
+				} else {
+					/* Unsupported type! Assign "Unsupported */
+					assign(RColName, "Unsupported");
+				}
+
+				/* Build the R call */
+				if (j < ncol - 1) {
+					RCall.append(RColName + ", ");
+				} else {
+					RCall.append(RColName + ")");
+				}
+			}
+
+			/*
+			 * Evaluate the call and then clean the temporal variables from the
+			 * R workspace
+			 */
+			eval(RCall.toString());
+
+			for (int j = 0; j < ncol; j++) {
+				eval("rm(.RVaadin_X" + j + ")");
+			}
+
+			/*
+			 * Assign column names, if given
+			 */
+			if (colNames != null) {
+				StringBuilder cnc = new StringBuilder("colnames(" + symbol
+						+ ") <- c(");
+
+				for (int j = 0; j < colNames.length - 1; j++) {
+					cnc.append("'" + colNames[j] + "',");
+				}
+				cnc.append("'" + colNames[colNames.length - 1] + "')");
+				eval(cnc.toString());
+			}
+
+			return true;
+
+		} catch (Exception e) {
+			showGeneralRError();
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	/**
+	 * <p>
+	 * Store a DataFrame into R data.frame and return true in case of success.
+	 * </p>
+	 * 
+	 * @see {@link RContainer#assign(String, DataFrame, String[])}
+	 * @param symbol R variable name
+	 * @param dataFrame DataFrame object
+	 * @return
+	 */
+	public boolean assign(String symbol, DataFrame dataFrame) {
+		return (assign(symbol, dataFrame, null));
 	}
 
 	/**
@@ -596,8 +885,8 @@ public class RContainer {
 	}
 
 	/**
-	 * Get a Vaadin Embedded image object that contains the corresponding R
-	 * plot generated by submitting and evaluating the RPlotCall String. The
+	 * Get a Vaadin Embedded image object that contains the corresponding R plot
+	 * generated by submitting and evaluating the RPlotCall String. The
 	 * imageName corresponds to the downloadable .png image name. The full name
 	 * of the images shown in the browser are
 	 * imageName_ISODate_runningId_[sessionId].png, e.g.
@@ -628,8 +917,8 @@ public class RContainer {
 	/**
 	 * This function is the actual workhorse for
 	 * {@link RContainer#getEmbeddedGraph}. It gets a Vaadin StreamResource
-	 * object that contains the corresponding R plot generated by submitting
-	 * and evaluating the RPlotCall String. The imageName corresponds to the
+	 * object that contains the corresponding R plot generated by submitting and
+	 * evaluating the RPlotCall String. The imageName corresponds to the
 	 * downloadable image name, and device is the format supported by the Cairo
 	 * graphics engine. The full name of the images shown in the browser are
 	 * imageName_ISODate_runningId_[sessionId].[device], e.g.
@@ -658,8 +947,8 @@ public class RContainer {
 				+ sessionID + "]." + device;
 
 		/*
-		 * Create a resource that uses the stream source and give it a name.
-		 * The constructor will automatically register the resource with the
+		 * Create a resource that uses the stream source and give it a name. The
+		 * constructor will automatically register the resource with the
 		 * application.
 		 */
 		StreamResource imageresource = new StreamResource(imagesource, fileName);
@@ -780,6 +1069,29 @@ public class RContainer {
 	}
 
 	/**
+	 * 
+	 * @param rs
+	 * @return
+	 */
+	public RTable getRTable(String rs) {
+
+		try {
+			tryEval(".RVaadinDfToTable <- " + rs);
+			String[] colNames = getStrings("colnames(.RVaadinDfToTable)");
+			DataFrame df = getDataFrame(".RVaadinDfToTable");
+
+			// tryEval("rm(.RVaadinDfToTable)");
+
+			return new RTable(df, colNames);
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
 	 * Get a ready-made RUpload element for submitting arbitrary files to the R
 	 * working directory. See also the {@link RUpload} class.
 	 * 
@@ -796,8 +1108,7 @@ public class RContainer {
 	 * directory. The Resource object can be associated e.g. with Links.
 	 * 
 	 * @param filename
-	 *            The name of the file stored under R current working
-	 *            directory.
+	 *            The name of the file stored under R current working directory.
 	 * @return Vaadin Resource object
 	 */
 	public Resource getDownloadResource(String filename) {
@@ -920,10 +1231,10 @@ public class RContainer {
 	 * <p>
 	 * For example, if R workspace contains the variable
 	 * {@code classes <- c("A", "B", "C")"}, then
-	 * {@code getListSelect("classes", "selected")} returns a ListSelect
-	 * element which automatically updates the variable {@code "selected"} in
-	 * R. The value can be e.g. {@code "A"}, or {@code c("A", "C")}, if we have
-	 * in addition chosen {@code setMultiSelect(true)} for the element.
+	 * {@code getListSelect("classes", "selected")} returns a ListSelect element
+	 * which automatically updates the variable {@code "selected"} in R. The
+	 * value can be e.g. {@code "A"}, or {@code c("A", "C")}, if we have in
+	 * addition chosen {@code setMultiSelect(true)} for the element.
 	 * </p>
 	 * 
 	 * <p>
@@ -975,8 +1286,8 @@ public class RContainer {
 	 * @param selectObj
 	 *            Selection object
 	 * @param optionsInName
-	 *            The R character vector to read the different options.
-	 *            Repeated values are ignored.
+	 *            The R character vector to read the different options. Repeated
+	 *            values are ignored.
 	 */
 	public void buildSelectOptions(final AbstractSelect selectObj,
 			String optionsInName) {
@@ -1014,8 +1325,8 @@ public class RContainer {
 			final String selectedOutName) {
 
 		/*
-		 * Check whether the given element already exists in the R workspace.
-		 * If not, initiate it as character(0) (i.e. vector of length zero).
+		 * Check whether the given element already exists in the R workspace. If
+		 * not, initiate it as character(0) (i.e. vector of length zero).
 		 */
 		eval("if( !exists('" + selectedOutName + "') ) { " + selectedOutName
 				+ " <- character(0) }");
@@ -1270,9 +1581,9 @@ public class RContainer {
 		int n = countParametersInLayout(hl);
 
 		/*
-		 * The parameter layout listener takes care that no illegal value can
-		 * be added to the list. Hence, it is safe to loop over the values and
-		 * cast them to doubles.
+		 * The parameter layout listener takes care that no illegal value can be
+		 * added to the list. Hence, it is safe to loop over the values and cast
+		 * them to doubles.
 		 */
 		double p[] = new double[n];
 
@@ -1545,8 +1856,8 @@ public class RContainer {
 	}
 
 	/**
-	 * A Static Helper function to convert a set of strings from Vaadin
-	 * multiple selection into an array of Strings
+	 * A Static Helper function to convert a set of strings from Vaadin multiple
+	 * selection into an array of Strings
 	 * 
 	 * @param obj
 	 *            An Object pointing to a Set of Strings
