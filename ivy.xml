@@ -31,6 +31,11 @@
 		<!-- Compiler for custom widget sets. Should not be deployed -->
 		<dependency org="com.vaadin" name="vaadin-client-compiler"
 			rev="&vaadin.version;" conf="widgetset-compile->default" />
+			
+        <!-- POI, for reading XLSX files -->
+	    <dependency org="org.apache.poi" name="poi" rev="3.10-FINAL" />
+      	<dependency org="org.apache.poi" name="poi-ooxml" rev="3.10-FINAL" /> 
+        
 	</dependencies>
 </ivy-module>
     

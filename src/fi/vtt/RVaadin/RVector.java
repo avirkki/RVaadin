@@ -33,7 +33,6 @@ public class RVector {
 	int[] iv = null;
 	double[] dv = null;
 	String[] sv = null;
-	boolean[] bv = null;
 
 	public RVector(int[] dv) {
 		this.iv = dv;
