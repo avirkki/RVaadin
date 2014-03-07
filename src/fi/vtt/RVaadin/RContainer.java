@@ -16,17 +16,20 @@
 
 package fi.vtt.RVaadin;
 
-import java.util.concurrent.Semaphore;
-
-import org.rosuda.REngine.*;
-import org.rosuda.REngine.Rserve.*;
-
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Formatter;
 import java.util.GregorianCalendar;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
+
+import javax.xml.crypto.Data;
+
+import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.REXPLogical;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.Rserve.RConnection;
+import org.rosuda.REngine.Rserve.RserveException;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -36,6 +39,7 @@ import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Embedded;
 import com.vaadin.ui.HorizontalLayout;
@@ -46,8 +50,10 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.Slider;
 import com.vaadin.ui.Slider.ValueOutOfBoundsException;
+import com.vaadin.ui.Window.CloseEvent;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.TwinColSelect;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.Reindeer;
 
@@ -87,8 +93,13 @@ public class RContainer {
 	private String sessionID = "";
 	private Semaphore rSemaphore = new Semaphore(1);
 	private Random rand = null;
-	private int screen_dpi = 75; /* for generating PDF files with Cairo */
+
+	/* for generating PDF files with Cairo */
+	private int screen_dpi = 75;
 	private boolean showButtonsInGraph = false;
+
+	/* for generating XLSX files with Apache POI */
+	SpreadSheetFactory ssf = null;
 
 	/**
 	 * <p>
@@ -847,8 +858,10 @@ public class RContainer {
 	 * </p>
 	 * 
 	 * @see {@link RContainer#assign(String, DataFrame, String[])}
-	 * @param symbol R variable name
-	 * @param dataFrame DataFrame object
+	 * @param symbol
+	 *            R variable name
+	 * @param dataFrame
+	 *            DataFrame object
 	 * @return
 	 */
 	public boolean assign(String symbol, DataFrame dataFrame) {
@@ -1080,8 +1093,6 @@ public class RContainer {
 			String[] colNames = getStrings("colnames(.RVaadinDfToTable)");
 			DataFrame df = getDataFrame(".RVaadinDfToTable");
 
-			// tryEval("rm(.RVaadinDfToTable)");
-
 			return new RTable(df, colNames);
 
 		} catch (Exception e) {
@@ -1089,6 +1100,86 @@ public class RContainer {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	/**
+	 * Generate a preview Window of R data.frame with Excel download option. 
+	 * 
+	 * @param rs R string which evaluates into R data.frame
+	 * @param caption Window caption 
+	 * @return Vaadin Window
+	 */
+	public Window getRTableWindow(String rs, String caption) {
+		
+		return getRTableWindow(rs, caption, null);
+	}
+
+	/**
+
+	 * @param maxRows Maximun number of rows shown in the window
+	 * @return Vaadin Window
+	 */
+	public Window getRTableWindow(String rs, String caption, Integer maxRows) {
+
+		final Integer DEFAULT_MAX_ROWS = 15;
+
+		/* Initiate a new SpreadSheetFacotry, if it does not exist already */
+		if (ssf == null) {
+			ssf = new SpreadSheetFactory();
+		}
+
+		/* Initiate the Table showing the data.frame */
+		RTable table = getRTable(rs);
+
+		/* Show only part of large tables */
+		if (maxRows == null) {
+			maxRows = DEFAULT_MAX_ROWS;
+		}
+		if (table.getDataFrame().nrow() >= maxRows) {
+			table.setPageLength(maxRows);
+			table.setCacheRate(2.0);
+		}
+
+		DataFrame df = table.getDataFrame();
+		String[] columnNames = table.getColumnNames();
+
+		/* The element with XLSX download button */
+		final SpreadSheetDownload ssd = new SpreadSheetDownload(df,
+				columnNames, null, null, ssf);
+
+		HorizontalLayout ssdBox = new HorizontalLayout();
+		ssdBox.setHeight("23px");
+		ssdBox.addComponent(ssd);
+
+		Window window = new Window(caption);
+		VerticalLayout root = new VerticalLayout();
+		root.setSpacing(true);
+		root.setMargin(true);
+		window.setContent(root);
+
+		root.addComponent(ssdBox);
+		root.addComponent(table);
+
+		Window.CloseListener windowListener = new Window.CloseListener() {
+
+			@Override
+			public void windowClose(CloseEvent e) {
+
+				/* Delete the XLSX file, if it was generated */
+				ssd.clear();
+			}
+		};
+		window.addCloseListener(windowListener);
+
+		return window;
+	}
+
+	public void setSpreadSheetFactory(SpreadSheetFactory ssf) {
+		this.ssf = ssf;
+	}
+
+	public SpreadSheetFactory getSpreadSheetFactory() {
+		return ssf;
 	}
 
 	/**

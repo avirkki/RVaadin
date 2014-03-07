@@ -3,6 +3,8 @@ package fi.vtt.RVaadin;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
@@ -58,7 +60,7 @@ public class SpreadSheetFactory {
 	 */
 	public File getXLSXFile(DataFrame df) {
 
-		return getXLSXFile(df, null);
+		return getXLSXFile(df, null, null, null);
 	}
 
 	/**
@@ -73,11 +75,7 @@ public class SpreadSheetFactory {
 	 */
 	public File getXLSXFile(DataFrame df, String[] columnNames) {
 
-		String dateAndCount = RContainer.getDateAndCount(fileCount);
-		fileCount++;
-
-		return getXLSXFile(df, columnNames, "Workbook_" + dateAndCount
-				+ ".xlsx");
+		return getXLSXFile(df, columnNames, null, null);
 	}
 
 	/**
@@ -94,7 +92,7 @@ public class SpreadSheetFactory {
 	 */
 	public File getXLSXFile(DataFrame df, String[] columnNames, String fileName) {
 
-		return getXLSXFile(df, columnNames, fileName, "R Data Frame");
+		return getXLSXFile(df, columnNames, fileName, null);
 	}
 
 	/**
@@ -151,6 +149,20 @@ public class SpreadSheetFactory {
 				columnNames[j] = "X" + (j + 1);
 			}
 		}
+		
+		/*
+		 * Declare default file and sheet names 
+		 */
+		if( fileName == null ) {
+			String dateAndCount = RContainer.getDateAndCount(fileCount);
+			fileCount++;
+			fileName = "Workbook_" + dateAndCount + ".xlsx";
+		}
+
+		if( sheetName == null ) {
+			sheetName = "R Data Frame";
+		}
+		
 
 		Row titleRow = sheet.createRow(sheetRow);
 		titleRow.setRowStyle(boldStyle);
@@ -222,10 +234,7 @@ public class SpreadSheetFactory {
 		Path filePath = Paths
 				.get(System.getProperty("java.io.tmpdir"), dirName);
 		filePath.toFile().mkdir();
-
 		File file = new File(filePath.toFile(), fileName);
-
-		System.out.println("Can write: " + file.canWrite());
 
 		try {
 			BufferedOutputStream bos = new BufferedOutputStream(
@@ -238,5 +247,31 @@ public class SpreadSheetFactory {
 		}
 
 		return file;
+	}
+
+	/**
+	 * Deletes the temporal XLSX file created by
+	 * {@link SpreadSheetFactory#getXLSXFile(DataFrame, String[], String, String)}
+	 * .
+	 * 
+	 * @param file
+	 */
+	void deleteXLSXFile(File file) {
+		try {
+			/*
+			 * Since we used folders with random UUID names to distinguish files
+			 * in different sessions and/or SpreadSheetFactories, we also need
+			 * to delete the parent folder of the file.
+			 */
+			String absolutePath = file.getAbsolutePath();
+			String directoryPath = absolutePath.substring(0,
+					absolutePath.lastIndexOf(File.separator));
+
+			Files.deleteIfExists(Paths.get(absolutePath));
+			Files.deleteIfExists(Paths.get(directoryPath));
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

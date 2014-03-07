@@ -55,6 +55,13 @@ public class RTable extends Table {
 	public DataFrame getDataFrame() {
 		return dataFrame;
 	}
+
+	/**
+	 * @return The DataFrame column names
+	 */
+	public String[] getColumnNames() {
+		return columnNames;
+	}
 	
 
 	@SuppressWarnings("unchecked")
