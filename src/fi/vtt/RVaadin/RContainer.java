@@ -596,6 +596,13 @@ public class RContainer {
 				} else if (isTRUE("is.character(.RVaadinDf[[" + j + "]])")) {
 					df.add(new RVector(getStrings(".RVaadinDf[[" + j + "]]")));
 
+				} else if (isTRUE("class(.RVaadinDf[[" + j + "]]) == 'Date'")) {
+					/*
+					 * Also cast R Date objects into character
+					 */
+					df.add(new RVector(getStrings("as.character(.RVaadinDf[["
+							+ j + "]])")));
+
 				} else if (isTRUE("is.logical(.RVaadinDf[[" + j + "]])")) {
 					/*
 					 * There is no way of representing missing logical values.
@@ -1101,22 +1108,25 @@ public class RContainer {
 			return null;
 		}
 	}
-	
+
 	/**
-	 * Generate a preview Window of R data.frame with Excel download option. 
+	 * Generate a preview Window of R data.frame with Excel download option.
 	 * 
-	 * @param rs R string which evaluates into R data.frame
-	 * @param caption Window caption 
+	 * @param rs
+	 *            R string which evaluates into R data.frame
+	 * @param caption
+	 *            Window caption
 	 * @return Vaadin Window
 	 */
 	public Window getRTableWindow(String rs, String caption) {
-		
+
 		return getRTableWindow(rs, caption, null);
 	}
 
 	/**
-
-	 * @param maxRows Maximun number of rows shown in the window
+	 * 
+	 * @param maxRows
+	 *            Maximun number of rows shown in the window
 	 * @return Vaadin Window
 	 */
 	public Window getRTableWindow(String rs, String caption, Integer maxRows) {
