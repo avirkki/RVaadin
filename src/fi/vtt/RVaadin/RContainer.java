@@ -1120,16 +1120,25 @@ public class RContainer {
 	 */
 	public Window getRTableWindow(String rs, String caption) {
 
-		return getRTableWindow(rs, caption, null);
+		return getRTableWindow(rs, caption, null, null);
 	}
 
 	/**
+	 * Generate a preview Window of R data.frame with Excel download option.
 	 * 
+	 * @param rs
+	 *            R string which evaluates into R data.frame
+	 * @param caption
+	 *            Window caption
 	 * @param maxRows
-	 *            Maximun number of rows shown in the window
+	 *            Maximum number of rows shown in the window. Value null uses
+	 *            the internal default.
+	 * @param width
+	 *            Explicit width of the table, or null for automatic width.
 	 * @return Vaadin Window
 	 */
-	public Window getRTableWindow(String rs, String caption, Integer maxRows) {
+	public Window getRTableWindow(String rs, String caption, Integer maxRows,
+			String width) {
 
 		final Integer DEFAULT_MAX_ROWS = 15;
 
@@ -1148,6 +1157,10 @@ public class RContainer {
 		if (table.getDataFrame().nrow() >= maxRows) {
 			table.setPageLength(maxRows);
 			table.setCacheRate(2.0);
+		}
+
+		if (width != null) {
+			table.setWidth(width);
 		}
 
 		DataFrame df = table.getDataFrame();
@@ -1170,6 +1183,7 @@ public class RContainer {
 		root.addComponent(ssdBox);
 		root.addComponent(table);
 
+		@SuppressWarnings("serial")
 		Window.CloseListener windowListener = new Window.CloseListener() {
 
 			@Override
