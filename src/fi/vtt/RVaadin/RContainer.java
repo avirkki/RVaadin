@@ -33,6 +33,7 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.util.filter.Not;
 import com.vaadin.server.Resource;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
@@ -1038,6 +1039,8 @@ public class RContainer {
 
 			Button.ClickListener openClicked = new Button.ClickListener() {
 
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public void buttonClick(ClickEvent event) {
 					StreamResource s = getImageResource(RPlotCall, width
@@ -1089,6 +1092,138 @@ public class RContainer {
 	}
 
 	/**
+	 * <p>
+	 * Evaluate a graph command in R and return the corresponding Scalable
+	 * Vector Graphics (svg) image via 'gridSVG' package.
+	 * </p>
+	 * 
+	 * <p>The gridSVG package enables using 'garnish' and other modern SVG options.
+	 * The image must be drawn by using the grid graphics engine. For
+	 * traditional graphics, use
+	 * {@link RContainer#getSvgString(String, int, int, Integer)}.</p>
+	 * 
+	 * @param RPlotCall
+	 *            the String to be evaluated by R
+	 * @param width
+	 *            the width of the image in inches (as reported by R)
+	 * @param height
+	 *            the height of the image in inches (as reported by R)
+	 * @param res
+	 *            Resolution parameter for R. If null, defaults to 72 dpi
+	 * @return The svg image as String
+	 */
+	public String getGridSvgString(String RPlotCall, int width, int height,
+			Integer res) {
+
+		String svgString = null;
+
+		if (res == null) {
+			/* Default resolution in R */
+			res = 72;
+		}
+
+		/* The argument name=NULL calls gridSVG to construct the image in memory */
+		String openGridCall = "gridsvg( name=NULL, res=" + res + ", width="
+				+ width + " ,height=" + height + " );";
+
+		/* Here we need functions from the XML package */
+		String getSvgCall = "saveXML(dev.off()$svg)";
+
+		try {
+			rSemaphore.acquire();
+
+			int supportInstalled = rc.parseAndEval(
+					"as.integer( require('grid') & "
+							+ "require('gridSVG') & require('XML') )")
+					.asInteger();
+
+			if (supportInstalled != 1) {
+				Notification.show("RVaadin: Either 'gridSVG', 'XML' or 'grid' "
+						+ "packages cannot be loaded.",
+						Notification.Type.TRAY_NOTIFICATION);
+				throw new Exception("Missing R packages.");
+			}
+
+			rc.parseAndEval(openGridCall);
+			rc.parseAndEval(RPlotCall);
+			svgString = rc.parseAndEval(getSvgCall).asString();
+
+		} catch (Exception e) {
+			if (verboseErrors) {
+				Notification.show("RVaadin: "
+						+ "Is the graphics based on grid?",
+						Notification.Type.TRAY_NOTIFICATION);
+				showGeneralRError();
+			}
+			e.printStackTrace();
+
+		} finally {
+			rSemaphore.release();
+		}
+
+		return svgString;
+	}
+
+	/**
+	 * <p>Evaluate a graph command in R and return the corresponding Scalable
+	 * Vector Graphics (svg) image via Cairo.</p> 
+	 * 
+	 * <p>The image is exported via the 'svg' function, which is sometimes faster
+	 * than 'gridSVG' and works also with traditional graphics. In turn, modern
+	 * svg functionality does not work (and some images that use vectorized grid
+	 * commands might not work). To use 'gridSVG', call
+	 * {@link RContainer#getGridSvgString(String, int, int, Integer)}.
+	 * 
+	 * @param RPlotCall
+	 *            the String to be evaluated by R
+	 * @param width
+	 *            the width of the image in inches (as reported by R)
+	 * @param height
+	 *            the height of the image in inches (as reported by R)
+	 * @param res
+	 *            Resolution parameter for R. If null, defaults to 72 dpi
+	 * @return The svg image as String
+	 */
+	public String getSvgString(String RPlotCall, int width, int height,
+			Integer pointsize) {
+
+		String svgString = null;
+
+		if (pointsize == null) {
+			/* Default resolution in R */
+			pointsize = 12;
+		}
+
+		try {
+			rSemaphore.acquire();
+
+			rc.parseAndEval("svg( filename='tmp.svg', width=" + width
+					+ ",height=" + height + ", pointsize=" + pointsize + " )");
+
+			/* Plot the image and write it temporarily to disk */
+			rc.parseAndEval(RPlotCall);
+			rc.parseAndEval("dev.off()");
+
+			svgString = rc.parseAndEval(
+					"readChar('tmp.svg', " + "file.info('tmp.svg')$size)")
+					.asString();
+
+			rc.parseAndEval("unlink('tmp.svg')");
+
+		} catch (Exception e) {
+			if (verboseErrors) {
+				showGeneralRError();
+			}
+			e.printStackTrace();
+
+		} finally {
+			rSemaphore.release();
+		}
+
+		return svgString;
+	}
+
+	/**
 	 * 
 	 * @param rs
 	 * @return
@@ -1103,7 +1238,6 @@ public class RContainer {
 			return new RTable(df, colNames);
 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
