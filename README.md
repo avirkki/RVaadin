@@ -1,8 +1,21 @@
 <img align="right" src="man/img/vttplain.png" />
-RVaadin
-=======
+
+# RVaadin
 
 A **Java library** to combine [Vaadin Web framework](http://vaadin.com) with the [R language](http://www.r-project.org).
+
+**NOTE** (2017-08-05): While I feel that Vaadin is a superior Web framework, and R remains my tool
+of choice for mathematical statistics, the *development of this package has
+been stalled for quite a while.*
+
+The reason for this is purely lack of free time. Feel free to fork this repository and
+use RVaadin if it fits your needs. I thank my former employer [VTT](http://www.vtt.fi)
+for funding this work. RVaadin is quite complete when it comes to showing static
+R-generated graphics (either png or svg) with Vaadin. For interactive graphics, I
+propose combining a suitable JavaScript library (g.e.
+[D3.js](http://https://d3js.org) with a light-weight back-end such as
+[Flask](http://flask.pocoo.org/) or [OpenCPU](http://flask.pocoo.org/), if an
+ industrial-scale framework like Vaadin seems overkill).
 
 When to use RVaadin
 -----------------
